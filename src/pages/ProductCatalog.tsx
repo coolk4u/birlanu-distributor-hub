@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,88 +34,116 @@ interface Product {
 const ProductCatalog = () => {
   const [products] = useState<Product[]>([
     {
-      id: 'BT001',
-      name: 'Birlanu Premium Tea 500g',
-      category: 'Tea',
-      price: 200,
-      mrp: 250,
-      image: '/api/placeholder/300/200',
-      rating: 4.5,
-      inStock: true,
-      description: 'Premium quality tea leaves with rich aroma and taste',
-      schemes: ['Buy 10 Get 1 Free', '5% Festival Discount'],
-      minOrderQty: 12,
-      unit: 'boxes'
-    },
-    {
       id: 'BC001',
-      name: 'Birlanu Instant Coffee 200g',
-      category: 'Coffee',
-      price: 180,
-      mrp: 220,
+      name: 'Birlanu Portland Cement - Grade 53',
+      category: 'Cement',
+      price: 420,
+      mrp: 450,
       image: '/api/placeholder/300/200',
-      rating: 4.3,
+      rating: 4.8,
       inStock: true,
-      description: 'Rich and aromatic instant coffee for perfect morning brew',
-      schemes: ['Bulk Order 15% Off', 'Free Samples'],
-      minOrderQty: 24,
-      unit: 'jars'
-    },
-    {
-      id: 'BM001',
-      name: 'Birlanu Masala Chai 250g',
-      category: 'Tea',
-      price: 160,
-      mrp: 200,
-      image: '/api/placeholder/300/200',
-      rating: 4.7,
-      inStock: true,
-      description: 'Traditional Indian masala chai with authentic spice blend',
-      schemes: ['Festive Combo Offer', '12+2 Free'],
-      minOrderQty: 15,
-      unit: 'packets'
-    },
-    {
-      id: 'BG001',
-      name: 'Birlanu Green Tea 100g',
-      category: 'Tea',
-      price: 120,
-      mrp: 150,
-      image: '/api/placeholder/300/200',
-      rating: 4.2,
-      inStock: true,
-      description: 'Healthy green tea with antioxidants for wellness',
-      schemes: ['Health Pack Discount', 'Buy 5 Get 20% Off'],
-      minOrderQty: 20,
-      unit: 'boxes'
+      description: 'High quality Portland cement Grade 53 for superior construction strength',
+      schemes: ['Buy 100 Bags Get 5 Free', 'Bulk Order 12% Discount'],
+      minOrderQty: 50,
+      unit: 'bags'
     },
     {
       id: 'BS001',
-      name: 'Birlanu Special Blend 300g',
-      category: 'Coffee',
-      price: 220,
-      mrp: 280,
+      name: 'Birlanu TMT Steel Bars - Fe500D',
+      category: 'Steel',
+      price: 65,
+      mrp: 70,
+      image: '/api/placeholder/300/200',
+      rating: 4.7,
+      inStock: true,
+      description: 'High strength TMT steel bars with superior bendability and weldability',
+      schemes: ['Contractor Special Rate', '10MT+ Free Transport'],
+      minOrderQty: 1000,
+      unit: 'kg'
+    },
+    {
+      id: 'BT001',
+      name: 'Birlanu Ceramic Floor Tiles - 600x600mm',
+      category: 'Tiles',
+      price: 45,
+      mrp: 55,
+      image: '/api/placeholder/300/200',
+      rating: 4.5,
+      inStock: true,
+      description: 'Premium ceramic tiles with anti-skid surface and water resistance',
+      schemes: ['Designer Collection 15% Off', 'Buy 100 Get 10 Free'],
+      minOrderQty: 100,
+      unit: 'pieces'
+    },
+    {
+      id: 'BB001',
+      name: 'Birlanu Red Clay Bricks - Class A',
+      category: 'Bricks',
+      price: 8,
+      mrp: 10,
+      image: '/api/placeholder/300/200',
+      rating: 4.4,
+      inStock: true,
+      description: 'High quality fired clay bricks with excellent compressive strength',
+      schemes: ['Monsoon Special 20% Off', 'Bulk Purchase Discount'],
+      minOrderQty: 1000,
+      unit: 'pieces'
+    },
+    {
+      id: 'BP001',
+      name: 'Birlanu Ready Mix Concrete - M25 Grade',
+      category: 'Concrete',
+      price: 4500,
+      mrp: 5000,
       image: '/api/placeholder/300/200',
       rating: 4.6,
       inStock: true,
-      description: 'Special coffee blend for connoisseurs',
-      schemes: ['Premium Member 10% Off', 'Early Bird Discount'],
-      minOrderQty: 18,
-      unit: 'packs'
+      description: 'Premium ready mix concrete with consistent quality and strength',
+      schemes: ['Volume Discount Available', 'Free Quality Testing'],
+      minOrderQty: 10,
+      unit: 'cubic meters'
     },
     {
-      id: 'BH001',
-      name: 'Birlanu Herbal Tea 150g',
-      category: 'Tea',
-      price: 140,
-      mrp: 180,
+      id: 'BA001',
+      name: 'Birlanu M-Sand (Manufactured Sand)',
+      category: 'Aggregates',
+      price: 1200,
+      mrp: 1400,
       image: '/api/placeholder/300/200',
-      rating: 4.4,
+      rating: 4.3,
+      inStock: true,
+      description: 'High quality manufactured sand for concrete and plastering work',
+      schemes: ['Rainy Season Special', 'Free Home Delivery 5km'],
+      minOrderQty: 20,
+      unit: 'tons'
+    },
+    {
+      id: 'BW001',
+      name: 'Birlanu Exterior Wall Paint - Weather Shield',
+      category: 'Paints',
+      price: 180,
+      mrp: 220,
+      image: '/api/placeholder/300/200',
+      rating: 4.2,
       inStock: false,
-      description: 'Natural herbal tea for health and wellness',
-      schemes: ['Wellness Package', 'Coming Soon Offer'],
-      minOrderQty: 12,
-      unit: 'boxes'
+      description: 'Weather resistant exterior paint with 7-year warranty',
+      schemes: ['Painter Scheme 25% Off', 'Color Mixing Free'],
+      minOrderQty: 50,
+      unit: 'liters'
+    },
+    {
+      id: 'BF001',
+      name: 'Birlanu AAC Blocks - 600x200x100mm',
+      category: 'Blocks',
+      price: 3800,
+      mrp: 4200,
+      image: '/api/placeholder/300/200',
+      rating: 4.5,
+      inStock: true,
+      description: 'Lightweight AAC blocks for faster construction and better insulation',
+      schemes: ['New Launch 15% Discount', 'Free Technical Support'],
+      minOrderQty: 1,
+      unit: 'cubic meters'
     }
   ]);
 
@@ -173,8 +200,8 @@ const ProductCatalog = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Product Catalog</h1>
-            <p className="text-gray-600">Browse and order from our extensive product range</p>
+            <h1 className="text-2xl font-bold text-gray-900">Construction Materials Catalog</h1>
+            <p className="text-gray-600">Browse and order from our extensive construction materials range</p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -195,7 +222,7 @@ const ProductCatalog = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search products..."
+                placeholder="Search construction materials..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -218,7 +245,7 @@ const ProductCatalog = () => {
           </div>
         </div>
 
-        {/* Indian Schemes Banner */}
+        {/* Construction Industry Schemes Banner */}
         <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-lg p-4 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -226,8 +253,8 @@ const ProductCatalog = () => {
                 <Gift className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-bold">Festival Special Offers!</h3>
-                <p className="text-sm text-orange-100">Multiple schemes available • Bulk discounts • Free samples</p>
+                <h3 className="font-bold">Construction Season Special Offers!</h3>
+                <p className="text-sm text-orange-100">Contractor schemes • Bulk discounts • Free transport • Quality guarantee</p>
               </div>
             </div>
             <Zap className="h-8 w-8 text-yellow-300" />
