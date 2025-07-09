@@ -21,16 +21,30 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const distributorName = localStorage.getItem('distributorName') || 'Distributor';
+
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
+
+  // Set initial sidebar state based on screen size
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('distributorAuth');
@@ -65,55 +79,79 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const isActivePath = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex relative">
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className={`bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 transition-all duration-300 ${
-        sidebarOpen ? 'w-64' : 'w-16'
-      } flex flex-col shadow-lg`}>
+      <div className={`bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 transition-all duration-300 flex flex-col shadow-lg ${
+        isMobile 
+          ? `fixed left-0 top-0 h-full z-50 ${sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'}`
+          : `${sidebarOpen ? 'w-64' : 'w-16'}`
+      }`}>
         
+        {/* Mobile Close Button */}
+        {isMobile && (
+          <div className="flex justify-end p-4 lg:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(false)}
+              className="text-white hover:bg-white/10"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
+
         {/* Logo Section */}
-        <div className="p-6 border-b border-blue-700/30">
+        <div className="p-4 lg:p-6 border-b border-blue-700/30">
           <div className="flex items-center space-x-3">
             <div className="bg-white/10 backdrop-blur-sm p-2 rounded-lg flex-shrink-0">
-              <Building2 className="h-6 w-6 text-white" />
+              <Building2 className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
             </div>
-            {sidebarOpen && (
+            {(sidebarOpen || isMobile) && (
               <div>
-                <h1 className="font-bold text-xl text-white">Birlanu</h1>
-                <p className="text-sm text-blue-200">Distributor Portal</p>
+                <h1 className="font-bold text-lg lg:text-xl text-white">Birlanu</h1>
+                <p className="text-xs lg:text-sm text-blue-200">Distributor Portal</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+        <nav className="flex-1 p-3 lg:p-4 overflow-y-auto">
+          <ul className="space-y-1 lg:space-y-2">
             {menuItems.map((item) => (
               <li key={item.path}>
                 <button
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 group ${
+                  className={`w-full flex items-center justify-between p-2.5 lg:p-3 rounded-lg transition-all duration-200 group ${
                     isActivePath(item.path)
                       ? 'bg-white/20 backdrop-blur-sm text-white border-r-2 border-white shadow-lg'
                       : 'hover:bg-white/10 text-blue-100 hover:text-white'
                   }`}
-                  title={!sidebarOpen ? item.label : ''}
+                  title={!sidebarOpen && !isMobile ? item.label : ''}
                 >
                   <div className="flex items-center space-x-3">
-                    <item.icon className={`h-5 w-5 flex-shrink-0 ${
+                    <item.icon className={`h-4 w-4 lg:h-5 lg:w-5 flex-shrink-0 ${
                       isActivePath(item.path) ? 'text-white' : 'text-blue-200'
                     }`} />
-                    {sidebarOpen && (
-                      <span className={`font-medium ${
+                    {(sidebarOpen || isMobile) && (
+                      <span className={`font-medium text-sm lg:text-base ${
                         isActivePath(item.path) ? 'text-white' : 'text-blue-100'
                       }`}>
                         {item.label}
                       </span>
                     )}
                   </div>
-                  {sidebarOpen && isActivePath(item.path) && (
-                    <ChevronRight className="h-4 w-4 text-white" />
+                  {(sidebarOpen || isMobile) && isActivePath(item.path) && (
+                    <ChevronRight className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
                   )}
                 </button>
               </li>
@@ -122,14 +160,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-blue-700/30">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="bg-white/10 backdrop-blur-sm p-2 rounded-full flex-shrink-0">
-              <User className="h-5 w-5 text-white" />
+        <div className="p-3 lg:p-4 border-t border-blue-700/30">
+          <div className="flex items-center space-x-3 mb-3 lg:mb-4">
+            <div className="bg-white/10 backdrop-blur-sm p-1.5 lg:p-2 rounded-full flex-shrink-0">
+              <User className="h-4 w-4 lg:h-5 lg:w-5 text-white" />
             </div>
-            {sidebarOpen && (
+            {(sidebarOpen || isMobile) && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{distributorName}</p>
+                <p className="text-xs lg:text-sm font-medium text-white truncate">{distributorName}</p>
                 <p className="text-xs text-blue-200">Active Distributor</p>
               </div>
             )}
@@ -139,44 +177,44 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             onClick={handleLogout}
             variant="ghost"
             size="sm"
-            className={`w-full text-blue-100 hover:text-white hover:bg-white/10 border border-blue-600/50 ${
-              sidebarOpen ? 'justify-start' : 'justify-center'
+            className={`w-full text-blue-100 hover:text-white hover:bg-white/10 border border-blue-600/50 text-xs lg:text-sm ${
+              (sidebarOpen || isMobile) ? 'justify-start' : 'justify-center'
             }`}
-            title={!sidebarOpen ? 'Logout' : ''}
+            title={!sidebarOpen && !isMobile ? 'Logout' : ''}
           >
-            <LogOut className="h-4 w-4" />
-            {sidebarOpen && <span className="ml-2">Logout</span>}
+            <LogOut className="h-3 w-3 lg:h-4 lg:w-4" />
+            {(sidebarOpen || isMobile) && <span className="ml-2">Logout</span>}
           </Button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 p-4">
+        <header className="bg-white shadow-sm border-b border-gray-200 p-3 lg:p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 lg:space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 hover:bg-gray-100"
+                className="p-1.5 lg:p-2 hover:bg-gray-100"
               >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                <Menu className="h-4 w-4 lg:h-5 lg:w-5" />
               </Button>
               
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 truncate">
                   {menuItems.find(item => isActivePath(item.path))?.label || 'Dashboard'}
                 </h2>
-                <p className="text-sm text-gray-500">Welcome back, {distributorName}</p>
+                <p className="text-xs lg:text-sm text-gray-500 truncate">Welcome back, {distributorName}</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
-                <Bell className="h-5 w-5 text-gray-600" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              <Button variant="ghost" size="sm" className="relative hover:bg-gray-100 p-1.5 lg:p-2">
+                <Bell className="h-4 w-4 lg:h-5 lg:w-5 text-gray-600" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center">
                   3
                 </span>
               </Button>
@@ -185,7 +223,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-3 lg:p-6 overflow-auto">
           {children}
         </main>
       </div>
