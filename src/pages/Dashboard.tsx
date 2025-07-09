@@ -22,50 +22,50 @@ const Dashboard = () => {
   const metrics = [
     {
       title: 'Monthly Sales',
-      value: '₹2,45,680',
-      change: '+12.5%',
+      value: '₹24,56,800',
+      change: '+15.2%',
       trend: 'up',
       icon: IndianRupee,
       color: 'text-green-600 bg-green-50'
     },
     {
       title: 'Orders Placed',
-      value: '156',
-      change: '+8.2%',
+      value: '89',
+      change: '+12.5%',
       trend: 'up',
       icon: ShoppingCart,
       color: 'text-blue-600 bg-blue-50'
     },
     {
       title: 'Product Categories',
-      value: '24',
-      change: '+2',
+      value: '8',
+      change: '+1',
       trend: 'up',
       icon: Package,
       color: 'text-purple-600 bg-purple-50'
     },
     {
       title: 'Achievement Rate',
-      value: '87%',
-      change: '-3.1%',
-      trend: 'down',
+      value: '92%',
+      change: '+4.2%',
+      trend: 'up',
       icon: Target,
       color: 'text-orange-600 bg-orange-50'
     }
   ];
 
   const recentOrders = [
-    { id: 'ORD-001', date: '2024-01-15', amount: '₹15,450', status: 'Delivered' },
-    { id: 'ORD-002', date: '2024-01-14', amount: '₹8,200', status: 'Processing' },
-    { id: 'ORD-003', date: '2024-01-13', amount: '₹22,100', status: 'Shipped' },
-    { id: 'ORD-004', date: '2024-01-12', amount: '₹5,800', status: 'Pending' },
+    { id: 'ORD-001', date: '2025-01-08', amount: '₹1,54,500', status: 'Delivered', product: 'Cement & Steel' },
+    { id: 'ORD-002', date: '2025-01-07', amount: '₹82,300', status: 'Processing', product: 'Tiles & Blocks' },
+    { id: 'ORD-003', date: '2025-01-06', amount: '₹2,21,000', status: 'Shipped', product: 'Ready Mix Concrete' },
+    { id: 'ORD-004', date: '2025-01-05', amount: '₹58,200', status: 'Pending', product: 'Bricks & Sand' },
   ];
 
   const topProducts = [
-    { name: 'Birlanu Premium Tea 500g', sold: 245, revenue: '₹49,000' },
-    { name: 'Birlanu Instant Coffee 200g', sold: 189, revenue: '₹37,800' },
-    { name: 'Birlanu Masala Chai 250g', sold: 156, revenue: '₹31,200' },
-    { name: 'Birlanu Green Tea 100g', sold: 134, revenue: '₹26,800' },
+    { name: 'Birlanu Portland Cement Grade 53', sold: '450 bags', revenue: '₹1,89,000' },
+    { name: 'Birlanu TMT Steel Bars Fe500D', sold: '15.2 tons', revenue: '₹9,88,000' },
+    { name: 'Birlanu Ceramic Floor Tiles 600x600mm', sold: '2,450 pieces', revenue: '₹1,10,250' },
+    { name: 'Birlanu Ready Mix Concrete M25', sold: '45 cubic meters', revenue: '₹2,02,500' },
   ];
 
   return (
@@ -75,8 +75,8 @@ const Dashboard = () => {
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold mb-2">Welcome to Your Dashboard</h1>
-              <p className="text-blue-100">Track your sales, manage orders, and grow your business with Birlanu</p>
+              <h1 className="text-2xl font-bold mb-2">Welcome to Birlanu Distributor Portal</h1>
+              <p className="text-blue-100">Manage your construction materials business with Birlanu's premium products</p>
             </div>
             <div className="hidden md:flex items-center space-x-4">
               <Button 
@@ -84,7 +84,7 @@ const Dashboard = () => {
                 onClick={() => navigate('/catalog')}
                 className="bg-white/20 border-white/30 text-white hover:bg-white/30"
               >
-                Browse Catalog
+                Browse Construction Materials
               </Button>
             </div>
           </div>
@@ -124,7 +124,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Recent Orders
+                Recent Construction Orders
                 <Button variant="ghost" size="sm" onClick={() => navigate('/orders')}>
                   View All
                 </Button>
@@ -137,6 +137,7 @@ const Dashboard = () => {
                     <div>
                       <p className="font-medium text-gray-900">{order.id}</p>
                       <p className="text-sm text-gray-500">{order.date}</p>
+                      <p className="text-xs text-gray-500">{order.product}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-gray-900">{order.amount}</p>
@@ -159,7 +160,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Top Selling Products
+                Top Construction Materials
                 <Button variant="ghost" size="sm" onClick={() => navigate('/catalog')}>
                   View Catalog
                 </Button>
@@ -171,7 +172,7 @@ const Dashboard = () => {
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <p className="font-medium text-gray-900 mb-1">{product.name}</p>
-                      <p className="text-sm text-gray-500">{product.sold} units sold</p>
+                      <p className="text-sm text-gray-500">{product.sold}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-gray-900">{product.revenue}</p>
@@ -199,7 +200,7 @@ const Dashboard = () => {
                 onClick={() => navigate('/catalog')}
               >
                 <Package className="h-6 w-6" />
-                <span>Browse Products</span>
+                <span>Browse Construction Materials</span>
               </Button>
               <Button 
                 variant="outline" 

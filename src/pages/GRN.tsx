@@ -36,9 +36,10 @@ const GRN = () => {
       supplier: 'Birlanu Head Office',
       invoiceNumber: 'INV-2025-0034',
       receivedDate: '2025-01-08',
-      totalItems: 5,
-      totalQuantity: 250,
-      totalValue: 45750,
+      totalItems: 3,
+      items: 'Cement (150 bags), Steel Bars (5 tons), Tiles (500 pieces)',
+      totalQuantity: '155 units',
+      totalValue: 845750,
       status: 'Completed',
       receivedBy: 'Raj Kumar'
     },
@@ -49,9 +50,10 @@ const GRN = () => {
       supplier: 'Birlanu Regional Depot',
       invoiceNumber: 'INV-2025-0035',
       receivedDate: '2025-01-07',
-      totalItems: 3,
-      totalQuantity: 150,
-      totalValue: 28900,
+      totalItems: 2,
+      items: 'Ready Mix Concrete (25 cubic meters), Bricks (2000 pieces)',
+      totalQuantity: '2025 units',
+      totalValue: 128500,
       status: 'Pending',
       receivedBy: 'Amit Sharma'
     },
@@ -62,9 +64,10 @@ const GRN = () => {
       supplier: 'Birlanu Manufacturing',
       invoiceNumber: 'INV-2025-0036',
       receivedDate: '2025-01-06',
-      totalItems: 8,
-      totalQuantity: 400,
-      totalValue: 67200,
+      totalItems: 4,
+      items: 'AAC Blocks (15 cubic meters), Paint (200 liters), M-Sand (10 tons), Aggregates (5 tons)',
+      totalQuantity: '230 units',
+      totalValue: 287200,
       status: 'Partially Received',
       receivedBy: 'Suresh Patel'
     }
@@ -78,8 +81,9 @@ const GRN = () => {
       supplier: 'Birlanu Head Office',
       invoiceDate: '2025-01-05',
       expectedDelivery: '2025-01-09',
-      totalValue: 35400,
-      items: 4
+      totalValue: 654200,
+      items: 'Portland Cement (200 bags), TMT Steel (8 tons)',
+      categories: 2
     },
     {
       id: 2,
@@ -88,15 +92,17 @@ const GRN = () => {
       supplier: 'Birlanu Regional Depot',
       invoiceDate: '2025-01-04',
       expectedDelivery: '2025-01-10',
-      totalValue: 52300,
-      items: 6
+      totalValue: 423800,
+      items: 'Ceramic Tiles (1000 pieces), Wall Paint (150 liters), Bricks (3000 pieces)',
+      categories: 3
     }
   ];
 
   const filteredGRN = grnRecords.filter(grn =>
     grn.grnNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     grn.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    grn.supplier.toLowerCase().includes(searchTerm.toLowerCase())
+    grn.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    grn.items.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
@@ -124,7 +130,7 @@ const GRN = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Goods Receipt Note (GRN)</h1>
-            <p className="text-gray-600">Track and manage received inventory against invoices</p>
+            <p className="text-gray-600">Track and manage received construction materials against invoices</p>
           </div>
           <Button className="bg-blue-600 hover:bg-blue-700">
             <Plus className="h-4 w-4 mr-2" />
@@ -182,7 +188,7 @@ const GRN = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">This Month Value</p>
-                  <p className="text-2xl font-bold">₹{grnRecords.reduce((sum, grn) => sum + grn.totalValue, 0).toLocaleString()}</p>
+                  <p className="text-2xl font-bold">₹{(grnRecords.reduce((sum, grn) => sum + grn.totalValue, 0) / 100000).toFixed(1)}L</p>
                 </div>
                 <div className="bg-purple-100 p-2 rounded-lg">
                   <Truck className="h-5 w-5 text-purple-600" />
@@ -197,7 +203,7 @@ const GRN = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Calendar className="h-5 w-5 mr-2" />
-              Pending Invoices for GRN
+              Pending Construction Material Invoices for GRN
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -228,8 +234,11 @@ const GRN = () => {
                         <span className="font-medium">₹{invoice.totalValue.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Items:</span>
-                        <span>{invoice.items}</span>
+                        <span className="text-gray-600">Categories:</span>
+                        <span>{invoice.categories}</span>
+                      </div>
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-600">Items: {invoice.items}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -243,7 +252,7 @@ const GRN = () => {
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <CardTitle>GRN Records</CardTitle>
+              <CardTitle>Construction Materials GRN Records</CardTitle>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -262,8 +271,8 @@ const GRN = () => {
                   <TableHead>GRN Details</TableHead>
                   <TableHead>Invoice & PO</TableHead>
                   <TableHead>Supplier</TableHead>
+                  <TableHead>Materials Received</TableHead>
                   <TableHead>Received Date</TableHead>
-                  <TableHead>Quantity</TableHead>
                   <TableHead>Total Value</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Received By</TableHead>
@@ -275,7 +284,7 @@ const GRN = () => {
                     <TableCell>
                       <div>
                         <p className="font-medium">{grn.grnNumber}</p>
-                        <p className="text-sm text-gray-500">{grn.totalItems} items</p>
+                        <p className="text-sm text-gray-500">{grn.totalItems} material types</p>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -285,11 +294,13 @@ const GRN = () => {
                       </div>
                     </TableCell>
                     <TableCell>{grn.supplier}</TableCell>
-                    <TableCell>{grn.receivedDate}</TableCell>
                     <TableCell>
-                      <p className="font-medium">{grn.totalQuantity}</p>
-                      <p className="text-sm text-gray-500">units</p>
+                      <div>
+                        <p className="text-sm font-medium">{grn.totalQuantity}</p>
+                        <p className="text-xs text-gray-500">{grn.items}</p>
+                      </div>
                     </TableCell>
+                    <TableCell>{grn.receivedDate}</TableCell>
                     <TableCell>₹{grn.totalValue.toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge className={`${getStatusColor(grn.status)} flex items-center gap-1`}>
