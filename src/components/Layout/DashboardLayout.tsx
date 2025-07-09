@@ -13,7 +13,11 @@ import {
   X,
   Building2,
   User,
-  Bell
+  Bell,
+  Users,
+  Warehouse,
+  ClipboardCheck,
+  UserCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -22,7 +26,7 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const distributorName = localStorage.getItem('distributorName') || 'Distributor';
@@ -48,8 +52,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Package, label: 'Product Catalog', path: '/catalog' },
+    { icon: Users, label: 'My Retailers', path: '/retailers' },
+    { icon: Warehouse, label: 'Stock Management', path: '/stocks' },
+    { icon: ClipboardCheck, label: 'GRN Management', path: '/grn' },
     { icon: ShoppingCart, label: 'My Cart', path: '/cart' },
     { icon: FileText, label: 'Orders', path: '/orders' },
+    { icon: UserCircle, label: 'My Profile', path: '/profile' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -84,14 +92,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <li key={item.path}>
                 <button
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors group ${
                     isActivePath(item.path)
                       ? 'bg-blue-600 text-white'
                       : 'hover:bg-slate-700 text-slate-300'
                   }`}
+                  title={!sidebarOpen ? item.label : ''}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
                   {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                  {!sidebarOpen && (
+                    <div className="absolute left-16 bg-slate-700 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                      {item.label}
+                    </div>
+                  )}
                 </button>
               </li>
             ))}
@@ -116,10 +130,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             onClick={handleLogout}
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700"
+            className={`w-full text-slate-300 hover:text-white hover:bg-slate-700 ${
+              sidebarOpen ? 'justify-start' : 'justify-center'
+            }`}
+            title={!sidebarOpen ? 'Logout' : ''}
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            {sidebarOpen && 'Logout'}
+            <LogOut className="h-4 w-4" />
+            {sidebarOpen && <span className="ml-2">Logout</span>}
           </Button>
         </div>
       </div>
