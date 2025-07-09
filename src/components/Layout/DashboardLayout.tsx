@@ -67,20 +67,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
+      <div className={`bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 transition-all duration-300 ${
         sidebarOpen ? 'w-64' : 'w-16'
-      } flex flex-col shadow-sm`}>
+      } flex flex-col shadow-lg`}>
         
         {/* Logo Section */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-blue-700/30">
           <div className="flex items-center space-x-3">
-            <div className="bg-blue-600 p-2 rounded-lg flex-shrink-0">
+            <div className="bg-white/10 backdrop-blur-sm p-2 rounded-lg flex-shrink-0">
               <Building2 className="h-6 w-6 text-white" />
             </div>
             {sidebarOpen && (
               <div>
-                <h1 className="font-bold text-xl text-gray-900">Birlanu</h1>
-                <p className="text-sm text-gray-500">Distributor Portal</p>
+                <h1 className="font-bold text-xl text-white">Birlanu</h1>
+                <p className="text-sm text-blue-200">Distributor Portal</p>
               </div>
             )}
           </div>
@@ -88,32 +88,32 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Navigation */}
         <nav className="flex-1 p-4">
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {menuItems.map((item) => (
               <li key={item.path}>
                 <button
                   onClick={() => navigate(item.path)}
                   className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 group ${
                     isActivePath(item.path)
-                      ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                      : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                      ? 'bg-white/20 backdrop-blur-sm text-white border-r-2 border-white shadow-lg'
+                      : 'hover:bg-white/10 text-blue-100 hover:text-white'
                   }`}
                   title={!sidebarOpen ? item.label : ''}
                 >
                   <div className="flex items-center space-x-3">
                     <item.icon className={`h-5 w-5 flex-shrink-0 ${
-                      isActivePath(item.path) ? 'text-blue-600' : 'text-gray-500'
+                      isActivePath(item.path) ? 'text-white' : 'text-blue-200'
                     }`} />
                     {sidebarOpen && (
                       <span className={`font-medium ${
-                        isActivePath(item.path) ? 'text-blue-600' : 'text-gray-700'
+                        isActivePath(item.path) ? 'text-white' : 'text-blue-100'
                       }`}>
                         {item.label}
                       </span>
                     )}
                   </div>
                   {sidebarOpen && isActivePath(item.path) && (
-                    <ChevronRight className="h-4 w-4 text-blue-600" />
+                    <ChevronRight className="h-4 w-4 text-white" />
                   )}
                 </button>
               </li>
@@ -122,15 +122,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-blue-700/30">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
-              <User className="h-5 w-5 text-blue-600" />
+            <div className="bg-white/10 backdrop-blur-sm p-2 rounded-full flex-shrink-0">
+              <User className="h-5 w-5 text-white" />
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{distributorName}</p>
-                <p className="text-xs text-gray-500">Active Distributor</p>
+                <p className="text-sm font-medium text-white truncate">{distributorName}</p>
+                <p className="text-xs text-blue-200">Active Distributor</p>
               </div>
             )}
           </div>
@@ -139,7 +139,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             onClick={handleLogout}
             variant="ghost"
             size="sm"
-            className={`w-full text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200 ${
+            className={`w-full text-blue-100 hover:text-white hover:bg-white/10 border border-blue-600/50 ${
               sidebarOpen ? 'justify-start' : 'justify-center'
             }`}
             title={!sidebarOpen ? 'Logout' : ''}
