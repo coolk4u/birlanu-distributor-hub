@@ -17,7 +17,8 @@ import {
   Users,
   Warehouse,
   ClipboardCheck,
-  UserCircle
+  UserCircle,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -66,20 +67,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className={`bg-slate-800 text-white transition-all duration-300 ${
+      <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
         sidebarOpen ? 'w-64' : 'w-16'
-      } flex flex-col`}>
+      } flex flex-col shadow-sm`}>
         
         {/* Logo Section */}
-        <div className="p-4 border-b border-slate-700">
+        <div className="p-6 border-b border-gray-100">
           <div className="flex items-center space-x-3">
             <div className="bg-blue-600 p-2 rounded-lg flex-shrink-0">
-              <Building2 className="h-6 w-6" />
+              <Building2 className="h-6 w-6 text-white" />
             </div>
             {sidebarOpen && (
               <div>
-                <h1 className="font-bold text-lg">Birlanu</h1>
-                <p className="text-xs text-slate-400">Distributor Portal</p>
+                <h1 className="font-bold text-xl text-gray-900">Birlanu</h1>
+                <p className="text-sm text-gray-500">Distributor Portal</p>
               </div>
             )}
           </div>
@@ -87,24 +88,32 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Navigation */}
         <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {menuItems.map((item) => (
               <li key={item.path}>
                 <button
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors group ${
+                  className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 group ${
                     isActivePath(item.path)
-                      ? 'bg-blue-600 text-white'
-                      : 'hover:bg-slate-700 text-slate-300'
+                      ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                      : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
                   }`}
                   title={!sidebarOpen ? item.label : ''}
                 >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {sidebarOpen && <span className="font-medium">{item.label}</span>}
-                  {!sidebarOpen && (
-                    <div className="absolute left-16 bg-slate-700 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                      {item.label}
-                    </div>
+                  <div className="flex items-center space-x-3">
+                    <item.icon className={`h-5 w-5 flex-shrink-0 ${
+                      isActivePath(item.path) ? 'text-blue-600' : 'text-gray-500'
+                    }`} />
+                    {sidebarOpen && (
+                      <span className={`font-medium ${
+                        isActivePath(item.path) ? 'text-blue-600' : 'text-gray-700'
+                      }`}>
+                        {item.label}
+                      </span>
+                    )}
+                  </div>
+                  {sidebarOpen && isActivePath(item.path) && (
+                    <ChevronRight className="h-4 w-4 text-blue-600" />
                   )}
                 </button>
               </li>
@@ -113,15 +122,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-slate-700">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="bg-slate-600 p-2 rounded-full flex-shrink-0">
-              <User className="h-4 w-4" />
+        <div className="p-4 border-t border-gray-100">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+              <User className="h-5 w-5 text-blue-600" />
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{distributorName}</p>
-                <p className="text-xs text-slate-400">Active Distributor</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{distributorName}</p>
+                <p className="text-xs text-gray-500">Active Distributor</p>
               </div>
             )}
           </div>
@@ -130,7 +139,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             onClick={handleLogout}
             variant="ghost"
             size="sm"
-            className={`w-full text-slate-300 hover:text-white hover:bg-slate-700 ${
+            className={`w-full text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200 ${
               sidebarOpen ? 'justify-start' : 'justify-center'
             }`}
             title={!sidebarOpen ? 'Logout' : ''}
@@ -144,20 +153,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b p-4">
+        <header className="bg-white shadow-sm border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2"
+                className="p-2 hover:bg-gray-100"
               >
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
               
               <div>
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="text-xl font-semibold text-gray-900">
                   {menuItems.find(item => isActivePath(item.path))?.label || 'Dashboard'}
                 </h2>
                 <p className="text-sm text-gray-500">Welcome back, {distributorName}</p>
@@ -165,8 +174,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
+                <Bell className="h-5 w-5 text-gray-600" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   3
                 </span>
