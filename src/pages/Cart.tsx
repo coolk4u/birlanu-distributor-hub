@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ShoppingCart, 
   Minus, 
@@ -11,9 +11,11 @@ import {
   Package,
   IndianRupee,
   Percent,
-  CheckCircle
+  CheckCircle,
+  Heart
 } from 'lucide-react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
+import CartTemplate from '@/components/CartTemplate/CartTemplate';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,6 +44,24 @@ const Cart = () => {
   const updateCart = (newCart: CartItem[]) => {
     setCart(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
+  };
+
+  const addTemplateToCart = (templateItems: CartItem[]) => {
+    const newCart = [...cart];
+    
+    templateItems.forEach(templateItem => {
+      const existingItemIndex = newCart.findIndex(item => item.id === templateItem.id);
+      
+      if (existingItemIndex >= 0) {
+        // Item exists, increase quantity
+        newCart[existingItemIndex].quantity += templateItem.quantity;
+      } else {
+        // Item doesn't exist, add it
+        newCart.push({ ...templateItem });
+      }
+    });
+    
+    updateCart(newCart);
   };
 
   const updateQuantity = (id: string, newQuantity: number) => {
@@ -98,7 +118,7 @@ const Cart = () => {
   };
 
   const calculateTax = () => {
-    return Math.round(calculateSubtotal() * 0.18); // 18% GST
+    return Math.round(calculateSubtotal() * 0.18);
   };
 
   const calculateTotal = () => {
@@ -115,10 +135,8 @@ const Cart = () => {
       return;
     }
 
-    // Mock order placement
     const orderId = 'ORD-' + Date.now().toString().slice(-6);
     
-    // Save order to localStorage (in real app, would send to backend)
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     const newOrder = {
       id: orderId,
@@ -142,9 +160,9 @@ const Cart = () => {
     navigate('/orders');
   };
 
-  if (cart.length === 0) {
-    return (
-      <DashboardLayout>
+  const renderCartContent = () => {
+    if (cart.length === 0) {
+      return (
         <div className="text-center py-12">
           <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
             <ShoppingCart className="h-12 w-12 text-gray-400" />
@@ -155,17 +173,15 @@ const Cart = () => {
             Browse Products
           </Button>
         </div>
-      </DashboardLayout>
-    );
-  }
+      );
+    }
 
-  return (
-    <DashboardLayout>
+    return (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
+            <h2 className="text-2xl font-bold text-gray-900">Shopping Cart</h2>
             <p className="text-gray-600">{cart.length} items in your cart</p>
           </div>
           <Button variant="outline" onClick={clearCart} className="text-red-600 hover:text-red-700">
@@ -179,14 +195,14 @@ const Cart = () => {
           <div className="lg:col-span-2 space-y-4">
             {cart.map(item => (
               <Card key={item.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-gray-100 w-16 h-16 rounded-lg flex items-center justify-center">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div className="bg-gray-100 w-16 h-16 rounded-lg flex items-center justify-center shrink-0">
                       <Package className="h-8 w-8 text-gray-400" />
                     </div>
                     
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-900">{item.name}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg text-gray-900 truncate">{item.name}</h3>
                       <div className="flex items-center space-x-2 mt-1">
                         <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
                         <span className="text-sm text-gray-500 line-through">₹{item.mrp}</span>
@@ -195,7 +211,6 @@ const Cart = () => {
                         </Badge>
                       </div>
                       
-                      {/* Schemes */}
                       <div className="mt-2 space-y-1">
                         {item.schemes.slice(0, 2).map((scheme, index) => (
                           <div key={index} className="flex items-center text-xs text-orange-600">
@@ -206,7 +221,7 @@ const Cart = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-between sm:justify-end sm:space-x-3">
                       <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
                         <Button
                           size="sm"
@@ -308,6 +323,40 @@ const Cart = () => {
             </Card>
           </div>
         </div>
+      </div>
+    );
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Cart & Templates</h1>
+        </div>
+
+        <Tabs defaultValue="cart" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="cart" className="flex items-center">
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Current Cart
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center">
+              <Heart className="h-4 w-4 mr-2" />
+              Saved Templates
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="cart" className="mt-6">
+            {renderCartContent()}
+          </TabsContent>
+          
+          <TabsContent value="templates" className="mt-6">
+            <CartTemplate 
+              currentCart={cart} 
+              onAddToCart={addTemplateToCart}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
