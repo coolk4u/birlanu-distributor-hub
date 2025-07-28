@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  ShoppingCart, 
-  Minus, 
-  Plus, 
-  Trash2, 
+import {
+  ShoppingCart,
+  Minus,
+  Plus,
+  Trash2,
   Package,
   IndianRupee,
   Percent,
@@ -18,6 +19,7 @@ import DashboardLayout from '@/components/Layout/DashboardLayout';
 import CartTemplate from '@/components/CartTemplate/CartTemplate';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface CartItem {
   id: string;
@@ -29,6 +31,11 @@ interface CartItem {
   minOrderQty: number;
   schemes: string[];
 }
+
+const CLIENT_ID = '3MVG97z4K_iuCemhaHjeuAp6A5jpAuMB31Trve1nd0TZAeH7onoyc.LAATp2pnK2Ag3kaMYorR4Np7E7XgMa9';
+const CLIENT_SECRET = '49C874D60D67C1A6BF3B31213B2F924747A0D27CBEFD2ACEDE0751E20FFFEAA7';
+const TOKEN_URL = 'https://pde3-dev-ed.develop.my.salesforce.com/services/oauth2/token';
+const ORDER_API_URL = 'https://pde3-dev-ed.develop.my.salesforce.com/services/apexrest/createOrderFromCartV2';
 
 const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -46,118 +53,93 @@ const Cart = () => {
     localStorage.setItem('cart', JSON.stringify(newCart));
   };
 
-  const addTemplateToCart = (templateItems: CartItem[]) => {
-    const newCart = [...cart];
-    
-    templateItems.forEach(templateItem => {
-      const existingItemIndex = newCart.findIndex(item => item.id === templateItem.id);
-      
-      if (existingItemIndex >= 0) {
-        // Item exists, increase quantity
-        newCart[existingItemIndex].quantity += templateItem.quantity;
-      } else {
-        // Item doesn't exist, add it
-        newCart.push({ ...templateItem });
-      }
-    });
-    
-    updateCart(newCart);
-  };
-
   const updateQuantity = (id: string, newQuantity: number) => {
     const item = cart.find(item => item.id === id);
     if (!item) return;
 
     if (newQuantity < item.minOrderQty) {
-      toast({
-        title: "Minimum Order Quantity",
-        description: `Minimum order quantity is ${item.minOrderQty} ${item.unit}`,
-        variant: "destructive"
-      });
+      toast({ title: 'Minimum Order Quantity', description: `Minimum order quantity is ${item.minOrderQty} ${item.unit}`, variant: 'destructive' });
       return;
     }
-
     if (newQuantity <= 0) {
       removeItem(id);
       return;
     }
-
-    const newCart = cart.map(item =>
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    );
+    const newCart = cart.map(item => item.id === id ? { ...item, quantity: newQuantity } : item);
     updateCart(newCart);
   };
 
   const removeItem = (id: string) => {
     const newCart = cart.filter(item => item.id !== id);
     updateCart(newCart);
-    toast({
-      title: "Item Removed",
-      description: "Product removed from cart",
-    });
+    toast({ title: 'Item Removed', description: 'Product removed from cart' });
   };
 
   const clearCart = () => {
     updateCart([]);
-    toast({
-      title: "Cart Cleared",
-      description: "All items removed from cart",
+    toast({ title: 'Cart Cleared', description: 'All items removed from cart' });
+  };
+
+  const addTemplateToCart = (templateItems: CartItem[]) => {
+    const newCart = [...cart];
+    templateItems.forEach(templateItem => {
+      const existingIndex = newCart.findIndex(item => item.id === templateItem.id);
+      if (existingIndex >= 0) {
+        newCart[existingIndex].quantity += templateItem.quantity;
+      } else {
+        newCart.push({ ...templateItem });
+      }
     });
+    updateCart(newCart);
   };
 
-  const calculateSubtotal = () => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const calculateSubtotal = () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const calculateMRPTotal = () => cart.reduce((sum, item) => sum + item.mrp * item.quantity, 0);
+  const calculateSavings = () => calculateMRPTotal() - calculateSubtotal();
+  const calculateTax = () => Math.round(calculateSubtotal() * 0.18);
+  const calculateTotal = () => calculateSubtotal() + calculateTax();
+
+  const fetchAccessToken = async () => {
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+    params.append('client_id', CLIENT_ID);
+    params.append('client_secret', CLIENT_SECRET);
+    const response = await axios.post(TOKEN_URL, params);
+    return response.data.access_token;
   };
 
-  const calculateMRPTotal = () => {
-    return cart.reduce((sum, item) => sum + (item.mrp * item.quantity), 0);
-  };
-
-  const calculateSavings = () => {
-    return calculateMRPTotal() - calculateSubtotal();
-  };
-
-  const calculateTax = () => {
-    return Math.round(calculateSubtotal() * 0.18);
-  };
-
-  const calculateTotal = () => {
-    return calculateSubtotal() + calculateTax();
-  };
-
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (cart.length === 0) {
-      toast({
-        title: "Empty Cart",
-        description: "Please add items to cart before placing order",
-        variant: "destructive"
-      });
+      toast({ title: 'Empty Cart', description: 'Please add items to cart before placing order', variant: 'destructive' });
       return;
     }
 
-    const orderId = 'ORD-' + Date.now().toString().slice(-6);
-    
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-    const newOrder = {
-      id: orderId,
-      date: new Date().toISOString().split('T')[0],
-      items: cart,
-      subtotal: calculateSubtotal(),
-      tax: calculateTax(),
-      total: calculateTotal(),
-      status: 'Processing'
-    };
-    orders.unshift(newOrder);
-    localStorage.setItem('orders', JSON.stringify(orders));
+    try {
+      const token = await fetchAccessToken();
+      const payload = {
+        accountId: '001fk000005qIMHAA2', // ✅ Replace this with the actual Account ID
+        cartItems: cart.map(item => ({
+          productId: item.id,
+          quantity: item.quantity
+        }))
+      };
 
-    clearCart();
-    
-    toast({
-      title: "Order Placed Successfully!",
-      description: `Order ${orderId} has been placed and is being processed`,
-    });
-    
-    navigate('/orders');
+      const response = await axios.post(ORDER_API_URL, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        clearCart();
+        toast({ title: 'Order Placed Successfully!', description: `Order ID: ${response.data.orderId}` });
+        navigate('/orders');
+      } else {
+        toast({ title: 'Order Failed', description: response.data.message, variant: 'destructive' });
+      }
+
+    } catch (err) {
+      console.error('Error placing order:', err);
+      toast({ title: 'Order Failed', description: 'Failed to create order. Please try again later.', variant: 'destructive' });
+    }
   };
 
   const renderCartContent = () => {
@@ -176,9 +158,9 @@ const Cart = () => {
       );
     }
 
+
     return (
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Shopping Cart</h2>
@@ -191,7 +173,6 @@ const Cart = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.map(item => (
               <Card key={item.id}>
@@ -200,7 +181,6 @@ const Cart = () => {
                     <div className="bg-gray-100 w-16 h-16 rounded-lg flex items-center justify-center shrink-0">
                       <Package className="h-8 w-8 text-gray-400" />
                     </div>
-                    
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg text-gray-900 truncate">{item.name}</h3>
                       <div className="flex items-center space-x-2 mt-1">
@@ -210,9 +190,8 @@ const Cart = () => {
                           {Math.round(((item.mrp - item.price) / item.mrp) * 100)}% OFF
                         </Badge>
                       </div>
-                      
                       <div className="mt-2 space-y-1">
-                        {item.schemes.slice(0, 2).map((scheme, index) => (
+                        {item.schemes?.slice(0, 2).map((scheme, index) => (
                           <div key={index} className="flex items-center text-xs text-orange-600">
                             <Percent className="h-3 w-3 mr-1" />
                             {scheme}
@@ -220,43 +199,21 @@ const Cart = () => {
                         ))}
                       </div>
                     </div>
-                    
                     <div className="flex items-center justify-between sm:justify-end sm:space-x-3">
                       <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => updateQuantity(item.id, item.quantity - item.minOrderQty)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity - item.minOrderQty)} className="h-8 w-8 p-0">
                           <Minus className="h-4 w-4" />
                         </Button>
-                        
-                        <span className="w-12 text-center font-medium">
-                          {item.quantity}
-                        </span>
-                        
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => updateQuantity(item.id, item.quantity + item.minOrderQty)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <span className="w-12 text-center font-medium">{item.quantity}</span>
+                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity + item.minOrderQty)} className="h-8 w-8 p-0">
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      
                       <div className="text-right">
                         <p className="font-bold text-lg">₹{item.price * item.quantity}</p>
                         <p className="text-sm text-gray-500">{item.quantity} {item.unit}</p>
                       </div>
-                      
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeItem(item.id)}
-                        className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => removeItem(item.id)} className="text-red-600 hover:text-red-700 h-8 w-8 p-0">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -266,7 +223,6 @@ const Cart = () => {
             ))}
           </div>
 
-          {/* Order Summary */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -293,7 +249,6 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
-                
                 <Button onClick={placeOrder} className="w-full bg-green-600 hover:bg-green-700">
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Place Order
@@ -301,7 +256,6 @@ const Cart = () => {
               </CardContent>
             </Card>
 
-            {/* Offers */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Available Offers</CardTitle>
@@ -327,13 +281,12 @@ const Cart = () => {
     );
   };
 
-  return (
+ return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Cart & Templates</h1>
         </div>
-
         <Tabs defaultValue="cart" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="cart" className="flex items-center">
@@ -345,16 +298,11 @@ const Cart = () => {
               Saved Templates
             </TabsTrigger>
           </TabsList>
-          
           <TabsContent value="cart" className="mt-6">
             {renderCartContent()}
           </TabsContent>
-          
           <TabsContent value="templates" className="mt-6">
-            <CartTemplate 
-              currentCart={cart} 
-              onAddToCart={addTemplateToCart}
-            />
+            <CartTemplate currentCart={cart} onAddToCart={addTemplateToCart} />
           </TabsContent>
         </Tabs>
       </div>
