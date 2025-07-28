@@ -1,313 +1,229 @@
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  ShoppingCart,
-  Minus,
-  Plus,
-  Trash2,
-  Package,
+import { 
+  TrendingUp, 
+  Package, 
+  ShoppingCart, 
   IndianRupee,
-  Percent,
-  CheckCircle,
-  Heart
+  Users,
+  Target,
+  Award,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
-import CartTemplate from '@/components/CartTemplate/CartTemplate';
-import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  mrp: number;
-  quantity: number;
-  unit: string;
-  minOrderQty: number;
-  schemes: string[];
-}
-
-const CLIENT_ID = '3MVG97z4K_iuCemhaHjeuAp6A5jpAuMB31Trve1nd0TZAeH7onoyc.LAATp2pnK2Ag3kaMYorR4Np7E7XgMa9';
-const CLIENT_SECRET = '49C874D60D67C1A6BF3B31213B2F924747A0D27CBEFD2ACEDE0751E20FFFEAA7';
-const TOKEN_URL = 'https://pde3-dev-ed.develop.my.salesforce.com/services/oauth2/token';
-const ORDER_API_URL = 'https://pde3-dev-ed.develop.my.salesforce.com/services/apexrest/createOrderFromCartV2';
-
-const Cart = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+const Dashboard = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
+  const metrics = [
+    {
+      title: 'Monthly Sales',
+      value: '₹24,56,800',
+      change: '+15.2%',
+      trend: 'up',
+      icon: IndianRupee,
+      color: 'text-green-600 bg-green-50'
+    },
+    {
+      title: 'Orders Placed',
+      value: '89',
+      change: '+12.5%',
+      trend: 'up',
+      icon: ShoppingCart,
+      color: 'text-blue-600 bg-blue-50'
+    },
+    {
+      title: 'Product Categories',
+      value: '8',
+      change: '+1',
+      trend: 'up',
+      icon: Package,
+      color: 'text-purple-600 bg-purple-50'
+    },
+    {
+      title: 'Achievement Rate',
+      value: '92%',
+      change: '+4.2%',
+      trend: 'up',
+      icon: Target,
+      color: 'text-orange-600 bg-orange-50'
     }
-  }, []);
+  ];
 
-  const updateCart = (newCart: CartItem[]) => {
-    setCart(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
-  };
+  const recentOrders = [
+    { id: 'ORD-001', date: '2025-01-08', amount: '₹1,54,500', status: 'Delivered', product: 'Cement & Steel' },
+    { id: 'ORD-002', date: '2025-01-07', amount: '₹82,300', status: 'Processing', product: 'Tiles & Blocks' },
+    { id: 'ORD-003', date: '2025-01-06', amount: '₹2,21,000', status: 'Shipped', product: 'Ready Mix Concrete' },
+    { id: 'ORD-004', date: '2025-01-05', amount: '₹58,200', status: 'Pending', product: 'Bricks & Sand' },
+  ];
 
-  const updateQuantity = (id: string, newQuantity: number) => {
-    const item = cart.find(item => item.id === id);
-    if (!item) return;
+  const topProducts = [
+    { name: 'Birlanu Portland Cement Grade 53', sold: '450 bags', revenue: '₹1,89,000' },
+    { name: 'Birlanu TMT Steel Bars Fe500D', sold: '15.2 tons', revenue: '₹9,88,000' },
+    { name: 'Birlanu Ceramic Floor Tiles 600x600mm', sold: '2,450 pieces', revenue: '₹1,10,250' },
+    { name: 'Birlanu Ready Mix Concrete M25', sold: '45 cubic meters', revenue: '₹2,02,500' },
+  ];
 
-    if (newQuantity < item.minOrderQty) {
-      toast({ title: 'Minimum Order Quantity', description: `Minimum order quantity is ${item.minOrderQty} ${item.unit}`, variant: 'destructive' });
-      return;
-    }
-    if (newQuantity <= 0) {
-      removeItem(id);
-      return;
-    }
-    const newCart = cart.map(item => item.id === id ? { ...item, quantity: newQuantity } : item);
-    updateCart(newCart);
-  };
-
-  const removeItem = (id: string) => {
-    const newCart = cart.filter(item => item.id !== id);
-    updateCart(newCart);
-    toast({ title: 'Item Removed', description: 'Product removed from cart' });
-  };
-
-  const clearCart = () => {
-    updateCart([]);
-    toast({ title: 'Cart Cleared', description: 'All items removed from cart' });
-  };
-
-  const addTemplateToCart = (templateItems: CartItem[]) => {
-    const newCart = [...cart];
-    templateItems.forEach(templateItem => {
-      const existingIndex = newCart.findIndex(item => item.id === templateItem.id);
-      if (existingIndex >= 0) {
-        newCart[existingIndex].quantity += templateItem.quantity;
-      } else {
-        newCart.push({ ...templateItem });
-      }
-    });
-    updateCart(newCart);
-  };
-
-  const calculateSubtotal = () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const calculateMRPTotal = () => cart.reduce((sum, item) => sum + item.mrp * item.quantity, 0);
-  const calculateSavings = () => calculateMRPTotal() - calculateSubtotal();
-  const calculateTax = () => Math.round(calculateSubtotal() * 0.18);
-  const calculateTotal = () => calculateSubtotal() + calculateTax();
-
-  const fetchAccessToken = async () => {
-    const params = new URLSearchParams();
-    params.append('grant_type', 'client_credentials');
-    params.append('client_id', CLIENT_ID);
-    params.append('client_secret', CLIENT_SECRET);
-    const response = await axios.post(TOKEN_URL, params);
-    return response.data.access_token;
-  };
-
-  const placeOrder = async () => {
-    if (cart.length === 0) {
-      toast({ title: 'Empty Cart', description: 'Please add items to cart before placing order', variant: 'destructive' });
-      return;
-    }
-
-    try {
-      const token = await fetchAccessToken();
-      const payload = {
-        accountId: '001fk000005qIMHAA2', // ✅ Replace this with the actual Account ID
-        cartItems: cart.map(item => ({
-          productId: item.id,
-          quantity: item.quantity
-        }))
-      };
-
-      const response = await axios.post(ORDER_API_URL, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.data.success) {
-        clearCart();
-        toast({ title: 'Order Placed Successfully!', description: `Order ID: ${response.data.orderId}` });
-        navigate('/orders');
-      } else {
-        toast({ title: 'Order Failed', description: response.data.message, variant: 'destructive' });
-      }
-
-    } catch (err) {
-      console.error('Error placing order:', err);
-      toast({ title: 'Order Failed', description: 'Failed to create order. Please try again later.', variant: 'destructive' });
-    }
-  };
-
-  const renderCartContent = () => {
-    if (cart.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-            <ShoppingCart className="h-12 w-12 text-gray-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-          <p className="text-gray-600 mb-6">Start shopping to add items to your cart</p>
-          <Button onClick={() => navigate('/catalog')} className="bg-blue-600 hover:bg-blue-700">
-            Browse Products
-          </Button>
-        </div>
-      );
-    }
-
-
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Shopping Cart</h2>
-            <p className="text-gray-600">{cart.length} items in your cart</p>
-          </div>
-          <Button variant="outline" onClick={clearCart} className="text-red-600 hover:text-red-700">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear Cart
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            {cart.map(item => (
-              <Card key={item.id}>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <div className="bg-gray-100 w-16 h-16 rounded-lg flex items-center justify-center shrink-0">
-                      <Package className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg text-gray-900 truncate">{item.name}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
-                        <span className="text-sm text-gray-500 line-through">₹{item.mrp}</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                          {Math.round(((item.mrp - item.price) / item.mrp) * 100)}% OFF
-                        </Badge>
-                      </div>
-                      <div className="mt-2 space-y-1">
-                        {item.schemes?.slice(0, 2).map((scheme, index) => (
-                          <div key={index} className="flex items-center text-xs text-orange-600">
-                            <Percent className="h-3 w-3 mr-1" />
-                            {scheme}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end sm:space-x-3">
-                      <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
-                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity - item.minOrderQty)} className="h-8 w-8 p-0">
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-12 text-center font-medium">{item.quantity}</span>
-                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity + item.minOrderQty)} className="h-8 w-8 p-0">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg">₹{item.price * item.quantity}</p>
-                        <p className="text-sm text-gray-500">{item.quantity} {item.unit}</p>
-                      </div>
-                      <Button size="sm" variant="ghost" onClick={() => removeItem(item.id)} className="text-red-600 hover:text-red-700 h-8 w-8 p-0">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal</span>
-                    <span>₹{calculateSubtotal()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>You Save</span>
-                    <span>-₹{calculateSavings()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>GST (18%)</span>
-                    <span>₹{calculateTax()}</span>
-                  </div>
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span>₹{calculateTotal()}</span>
-                    </div>
-                  </div>
-                </div>
-                <Button onClick={placeOrder} className="w-full bg-green-600 hover:bg-green-700">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Place Order
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Available Offers</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
-                  <div className="flex items-center text-orange-700">
-                    <Percent className="h-4 w-4 mr-2" />
-                    <span className="text-sm font-medium">Festival Special: Extra 5% off on orders above ₹5000</span>
-                  </div>
-                </div>
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center text-blue-700">
-                    <IndianRupee className="h-4 w-4 mr-2" />
-                    <span className="text-sm font-medium">Free delivery on orders above ₹2000</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
- return (
+  return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Cart & Templates</h1>
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Welcome to Birlanu Distributor Portal</h1>
+              <p className="text-blue-100">Manage your construction materials business with Birlanu's premium products</p>
+            </div>
+            <div className="hidden md:flex items-center space-x-4">
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate('/catalog')}
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              >
+                Browse Construction Materials
+              </Button>
+            </div>
+          </div>
         </div>
-        <Tabs defaultValue="cart" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="cart" className="flex items-center">
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Current Cart
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center">
-              <Heart className="h-4 w-4 mr-2" />
-              Saved Templates
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="cart" className="mt-6">
-            {renderCartContent()}
-          </TabsContent>
-          <TabsContent value="templates" className="mt-6">
-            <CartTemplate currentCart={cart} onAddToCart={addTemplateToCart} />
-          </TabsContent>
-        </Tabs>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {metrics.map((metric, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">{metric.title}</p>
+                    <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
+                    <div className="flex items-center mt-2">
+                      {metric.trend === 'up' ? (
+                        <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                      ) : (
+                        <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                      )}
+                      <span className={`text-sm ${metric.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {metric.change}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={`p-3 rounded-full ${metric.color}`}>
+                    <metric.icon className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Recent Construction Orders
+                <Button variant="ghost" size="sm" onClick={() => navigate('/orders')}>
+                  View All
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{order.id}</p>
+                      <p className="text-sm text-gray-500">{order.date}</p>
+                      <p className="text-xs text-gray-500">{order.product}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">{order.amount}</p>
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                        order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                        order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'Shipped' ? 'bg-purple-100 text-purple-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Top Products */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Top Construction Materials
+                <Button variant="ghost" size="sm" onClick={() => navigate('/catalog')}>
+                  View Catalog
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {topProducts.map((product, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 mb-1">{product.name}</p>
+                      <p className="text-sm text-gray-500">{product.sold}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">{product.revenue}</p>
+                      <div className="flex items-center">
+                        <Award className="h-4 w-4 text-yellow-500 mr-1" />
+                        <span className="text-sm text-gray-500">#{index + 1}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button 
+                className="h-20 flex flex-col space-y-2 bg-blue-600 hover:bg-blue-700"
+                onClick={() => navigate('/catalog')}
+              >
+                <Package className="h-6 w-6" />
+                <span>Browse Construction Materials</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-20 flex flex-col space-y-2"
+                onClick={() => navigate('/cart')}
+              >
+                <ShoppingCart className="h-6 w-6" />
+                <span>View Cart</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-20 flex flex-col space-y-2"
+                onClick={() => navigate('/orders')}
+              >
+                <Calendar className="h-6 w-6" />
+                <span>Order History</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
 };
 
-export default Cart;
+export default Dashboard;
