@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,17 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+  unit: string;
+}
+
 interface Order {
   id: string;
   date: string;
-  items: any[];
+  items: OrderItem[];
   subtotal: number;
   tax: number;
   total: number;
@@ -28,51 +35,71 @@ const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    const savedOrders = localStorage.getItem('orders');
-    if (savedOrders) {
-      setOrders(JSON.parse(savedOrders));
-    } else {
-      // Sample orders for demo
-      const sampleOrders: Order[] = [
-        {
-          id: 'ORD-001234',
-          date: '2024-01-15',
-          items: [
-            { name: 'Birlanu Premium Tea 500g', quantity: 24, price: 200, unit: 'boxes' },
-            { name: 'Birlanu Instant Coffee 200g', quantity: 12, price: 180, unit: 'jars' }
-          ],
-          subtotal: 7000,
-          tax: 1260,
-          total: 8260,
-          status: 'Delivered'
-        },
-        {
-          id: 'ORD-001235',
-          date: '2024-01-14',
-          items: [
-            { name: 'Birlanu Masala Chai 250g', quantity: 30, price: 160, unit: 'packets' }
-          ],
-          subtotal: 4800,
-          tax: 864,
-          total: 5664,
-          status: 'Shipped'
-        },
-        {
-          id: 'ORD-001236',
-          date: '2024-01-13',
-          items: [
-            { name: 'Birlanu Green Tea 100g', quantity: 20, price: 120, unit: 'boxes' },
-            { name: 'Birlanu Special Blend 300g', quantity: 18, price: 220, unit: 'packs' }
-          ],
-          subtotal: 6360,
-          tax: 1145,
-          total: 7505,
-          status: 'Processing'
-        }
-      ];
-      setOrders(sampleOrders);
-      localStorage.setItem('orders', JSON.stringify(sampleOrders));
-    }
+    const fetchOrders = async () => {
+      try {
+        const authResponse = await axios.post(
+          'https://pde3-dev-ed.develop.my.salesforce.com/services/oauth2/token',
+          new URLSearchParams({
+            grant_type: 'client_credentials',
+            client_id: '3MVG97z4K_iuCemhaHjeuAp6A5jpAuMB31Trve1nd0TZAeH7onoyc.LAATp2pnK2Ag3kaMYorR4Np7E7XgMa9',
+            client_secret: '49C874D60D67C1A6BF3B31213B2F924747A0D27CBEFD2ACEDE0751E20FFFEAA7',
+          }),
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        );
+
+        const accessToken = authResponse.data.access_token;
+
+        const query = `
+          SELECT OrderNumber, Status, EffectiveDate, AccountId,
+          (SELECT Quantity, UnitPrice, TotalPrice,
+                  PricebookEntry.Product2.Name,
+                  PricebookEntry.Product2.ProductCode,
+                  PricebookEntry.Product2.Description
+           FROM OrderItems)
+          FROM Order
+          WHERE CreatedDate = TODAY
+          ORDER BY CreatedDate DESC
+          LIMIT 200
+        `.replace(/\s+/g, '+');
+
+        const queryUrl = `https://pde3-dev-ed.develop.my.salesforce.com/services/data/v62.0/query?q=${query}`;
+        const response = await axios.get(queryUrl, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const fetchedOrders = response.data.records.map((order: any) => {
+          const items = order.OrderItems.records.map((item: any) => ({
+            name: item.PricebookEntry.Product2.Name,
+            quantity: item.Quantity,
+            price: item.UnitPrice,
+            unit: 'units', // replace with actual unit if available
+          }));
+
+          const subtotal = items.reduce((sum: number, item: OrderItem) => sum + item.quantity * item.price, 0);
+          const tax = Math.round(subtotal * 0.18);
+          const total = subtotal + tax;
+
+          return {
+            id: order.OrderNumber,
+            date: order.EffectiveDate,
+            items,
+            subtotal,
+            tax,
+            total,
+            status: order.Status || 'Pending',
+          };
+        });
+
+        setOrders(fetchedOrders);
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+      }
+    };
+
+    fetchOrders();
   }, []);
 
   const getStatusIcon = (status: string) => {
@@ -106,13 +133,11 @@ const Orders = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Order History</h1>
             <p className="text-gray-600">Track and manage your orders</p>
           </div>
-          
           <div className="flex items-center space-x-4">
             <Badge variant="secondary" className="bg-blue-100 text-blue-800">
               <FileText className="h-4 w-4 mr-1" />
@@ -151,7 +176,7 @@ const Orders = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       <Badge className={`${getStatusColor(order.status)} mb-2`}>
                         {getStatusIcon(order.status)}
@@ -161,9 +186,8 @@ const Orders = () => {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="pt-0">
-                  {/* Order Items */}
                   <div className="space-y-2 mb-4">
                     {order.items.map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -177,8 +201,7 @@ const Orders = () => {
                       </div>
                     ))}
                   </div>
-                  
-                  {/* Order Summary */}
+
                   <div className="border-t pt-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
