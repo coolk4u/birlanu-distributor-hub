@@ -1,17 +1,10 @@
+// orders.tsx
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  FileText, 
-  Package, 
-  Truck, 
-  CheckCircle, 
-  Clock,
-  IndianRupee,
-  Calendar
-} from 'lucide-react';
+import { FileText, Package, Truck, CheckCircle, Clock, IndianRupee, Calendar } from 'lucide-react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 
 interface OrderItem {
@@ -57,7 +50,6 @@ const Orders = () => {
                   PricebookEntry.Product2.Description
            FROM OrderItems)
           FROM Order
-          WHERE CreatedDate = TODAY
           ORDER BY CreatedDate DESC
           LIMIT 200
         `.replace(/\s+/g, '+');
@@ -71,11 +63,11 @@ const Orders = () => {
         });
 
         const fetchedOrders = response.data.records.map((order: any) => {
-          const items = order.OrderItems.records.map((item: any) => ({
-            name: item.PricebookEntry.Product2.Name,
+          const items = (order.OrderItems?.records || []).map((item: any) => ({
+            name: item.PricebookEntry?.Product2?.Name || 'Unknown',
             quantity: item.Quantity,
             price: item.UnitPrice,
-            unit: 'units', // replace with actual unit if available
+            unit: 'units',
           }));
 
           const subtotal = items.reduce((sum: number, item: OrderItem) => sum + item.quantity * item.price, 0);
@@ -104,29 +96,20 @@ const Orders = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Processing':
-        return <Clock className="h-4 w-4" />;
-      case 'Shipped':
-        return <Truck className="h-4 w-4" />;
-      case 'Delivered':
-        return <CheckCircle className="h-4 w-4" />;
-      default:
-        return <Package className="h-4 w-4" />;
+      case 'Processing': return <Clock className="h-4 w-4" />;
+      case 'Shipped': return <Truck className="h-4 w-4" />;
+      case 'Delivered': return <CheckCircle className="h-4 w-4" />;
+      default: return <Package className="h-4 w-4" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'Shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'Delivered':
-        return 'bg-green-100 text-green-800';
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'Processing': return 'bg-blue-100 text-blue-800';
+      case 'Shipped': return 'bg-purple-100 text-purple-800';
+      case 'Delivered': return 'bg-green-100 text-green-800';
+      case 'Pending': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -176,7 +159,6 @@ const Orders = () => {
                         </div>
                       </div>
                     </div>
-
                     <div className="text-right">
                       <Badge className={`${getStatusColor(order.status)} mb-2`}>
                         {getStatusIcon(order.status)}
@@ -193,7 +175,9 @@ const Orders = () => {
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-900">{item.name}</p>
-                          <p className="text-sm text-gray-600">{item.quantity} {item.unit} × ₹{item.price}</p>
+                          <p className="text-sm text-gray-600">
+                            {item.quantity} {item.unit} × ₹{item.price}
+                          </p>
                         </div>
                         <div className="font-medium text-gray-900">
                           ₹{item.quantity * item.price}
