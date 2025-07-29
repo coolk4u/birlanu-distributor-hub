@@ -37,7 +37,7 @@ const Dashboard = () => {
       color: 'text-blue-600 bg-blue-50'
     },
     {
-      title: 'Product Categories',
+      title: 'Order Pending Delivery',
       value: '8',
       change: '+1',
       trend: 'up',
@@ -160,7 +160,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Top Construction Materials
+                Hot Selling Products
                 <Button variant="ghost" size="sm" onClick={() => navigate('/catalog')}>
                   View Catalog
                 </Button>

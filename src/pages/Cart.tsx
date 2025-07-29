@@ -108,39 +108,55 @@ const Cart = () => {
     return response.data.access_token;
   };
 
-  const placeOrder = async () => {
-    if (cart.length === 0) {
-      toast({ title: 'Empty Cart', description: 'Please add items to cart before placing order', variant: 'destructive' });
-      return;
-    }
+const placeOrder = async () => {
+  if (cart.length === 0) {
+    toast({
+      title: 'Empty Cart',
+      description: 'Please add items to cart before placing order',
+      variant: 'destructive'
+    });
+    return;
+  }
 
-    try {
-      const token = await fetchAccessToken();
-      const payload = {
-        accountId: '001fk000005qIMHAA2', // ✅ Replace this with the actual Account ID
-        cartItems: cart.map(item => ({
-          productId: item.id,
-          quantity: item.quantity
-        }))
-      };
+  try {
+    const token = await fetchAccessToken();
+    const payload = {
+      accountId: '001fk000005qIMHAA2',
+      cartItems: cart.map(item => ({
+        productId: item.id,
+        quantity: item.quantity
+      }))
+    };
 
-      const response = await axios.post(ORDER_API_URL, payload, {
-        headers: { Authorization: `Bearer ${token}` }
+    const response = await axios.post(ORDER_API_URL, payload, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (response.data.success) {
+      clearCart();
+      toast({
+        title: 'Order Placed Successfully!',
+        description: `Order Number: ${response.data.orderNumber}` // ✅ Use OrderNumber instead of orderId
       });
-
-      if (response.data.success) {
-        clearCart();
-        toast({ title: 'Order Placed Successfully!', description: `Order ID: ${response.data.orderId}` });
-        navigate('/orders');
-      } else {
-        toast({ title: 'Order Failed', description: response.data.message, variant: 'destructive' });
-      }
-
-    } catch (err) {
-      console.error('Error placing order:', err);
-      toast({ title: 'Order Failed', description: 'Failed to create order. Please try again later.', variant: 'destructive' });
+      navigate('/orders');
+    } else {
+      toast({
+        title: 'Order Failed',
+        description: response.data.message,
+        variant: 'destructive'
+      });
     }
-  };
+
+  } catch (err) {
+    console.error('Error placing order:', err);
+    toast({
+      title: 'Order Failed',
+      description: 'Failed to create order. Please try again later.',
+      variant: 'destructive'
+    });
+  }
+};
+
 
   const renderCartContent = () => {
     if (cart.length === 0) {
@@ -201,11 +217,11 @@ const Cart = () => {
                     </div>
                     <div className="flex items-center justify-between sm:justify-end sm:space-x-3">
                       <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
-                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity - item.minOrderQty)} className="h-8 w-8 p-0">
+                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity - 1)} className="h-8 w-8 p-0">
                           <Minus className="h-4 w-4" />
                         </Button>
                         <span className="w-12 text-center font-medium">{item.quantity}</span>
-                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity + item.minOrderQty)} className="h-8 w-8 p-0">
+                        <Button size="sm" variant="ghost" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="h-8 w-8 p-0">
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
