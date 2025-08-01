@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -108,6 +107,9 @@ const Cart = () => {
     return response.data.access_token;
   };
 
+// Add this constant for the new query endpoint
+const ORDER_QUERY_API_URL = 'https://pde3-dev-ed.develop.my.salesforce.com/services/data/v58.0/query?q=SELECT+OrderNumber+FROM+Order+WHERE+Id=';
+
 const placeOrder = async () => {
   if (cart.length === 0) {
     toast({
@@ -128,24 +130,39 @@ const placeOrder = async () => {
       }))
     };
 
-    const response = await axios.post(ORDER_API_URL, payload, {
+    // Step 1: Create the order
+    const createOrderResponse = await axios.post(ORDER_API_URL, payload, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    if (response.data.success) {
-      clearCart();
-      toast({
-        title: 'Order Placed Successfully!',
-        description: `Order Number: ${response.data.orderNumber}` // ✅ Use OrderNumber instead of orderId
-      });
-      navigate('/orders');
-    } else {
+    if (!createOrderResponse.data.success) {
       toast({
         title: 'Order Failed',
-        description: response.data.message,
+        description: createOrderResponse.data.message,
         variant: 'destructive'
       });
+      return;
     }
+
+    // Step 2: Get the Salesforce Order ID from the response
+    const orderId = createOrderResponse.data.orderId; // Make sure this field exists in the response
+    
+    // Step 3: Query Salesforce to get the formatted order number
+    const queryResponse = await axios.get(`${ORDER_QUERY_API_URL}'${orderId}'`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // Extract the formatted order number
+    const formattedOrderNumber = queryResponse.data.records[0].OrderNumber;
+
+    // Clear cart and show success message
+    clearCart();
+    toast({
+      title: 'Order Placed Successfully!',
+      description: `Order Number: ${formattedOrderNumber}`,
+      variant: 'default'
+    });
+    navigate('/orders');
 
   } catch (err) {
     console.error('Error placing order:', err);
@@ -156,7 +173,6 @@ const placeOrder = async () => {
     });
   }
 };
-
 
   const renderCartContent = () => {
     if (cart.length === 0) {
@@ -173,7 +189,6 @@ const placeOrder = async () => {
         </div>
       );
     }
-
 
     return (
       <div className="space-y-6">
@@ -297,7 +312,7 @@ const placeOrder = async () => {
     );
   };
 
- return (
+  return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
