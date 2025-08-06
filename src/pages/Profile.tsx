@@ -24,19 +24,19 @@ import {
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: 'Rajesh Kumar Sharma',
-    email: 'rajesh.sharma@email.com',
+    name: 'Rahul Reddy',
+    email: 'rahul@gmail.com',
     phone: '+91 98765 43210',
     distributorId: 'DIST-2024-001',
-    businessName: 'Sharma Trading Company',
-    address: 'Shop No. 45, MG Road, Commercial Complex',
-    city: 'Bangalore',
-    state: 'Karnataka',
-    pincode: '560001',
+    businessName: 'Anand Distributors',
+    address: '12 Nehru Road',
+    city: 'Mumbai',
+    state: 'Maharastra',
+    pincode: '400001',
     gst: '29ABCDE1234F1Z5',
     pan: 'ABCDE1234F',
     joinDate: '2020-03-15',
-    territory: 'South Bangalore',
+    territory: '1212 7878 3434',
     tier: 'Gold'
   });
 
@@ -275,7 +275,7 @@ const Profile = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="territory">Territory</Label>
+                    <Label htmlFor="territory">Aadhar Number</Label>
                     <Input
                       id="territory"
                       value={profileData.territory}
