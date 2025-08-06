@@ -34,7 +34,7 @@ const Profile = () => {
     state: 'Maharastra',
     pincode: '400001',
     gst: '29ABCDE1234F1Z5',
-    pan: 'ABCDE1234F',
+    pan: 'CXEPG328F',
     joinDate: '2020-03-15',
     territory: '1212 7878 3434',
     tier: 'Gold'
