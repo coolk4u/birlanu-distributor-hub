@@ -45,8 +45,8 @@ const Dashboard = () => {
       color: 'text-purple-600 bg-purple-50'
     },
     {
-      title: 'Achievement Rate',
-      value: '92%',
+      title: 'Available Credit',
+      value: '3,80,000',
       change: '+4.2%',
       trend: 'up',
       icon: Target,
