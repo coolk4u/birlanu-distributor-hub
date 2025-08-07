@@ -36,7 +36,7 @@ const Profile = () => {
     gst: '29ABCDE1234F1Z5',
     pan: 'CXEPG328F',
     joinDate: '2020-03-15',
-    territory: '1212 7878 3434',
+    territory: 'XXXX XXXX 3434',
     tier: 'Gold'
   });
 
