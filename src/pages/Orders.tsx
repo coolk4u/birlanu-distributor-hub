@@ -1,6 +1,5 @@
 // orders.tsx
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,74 +23,84 @@ interface Order {
   status: 'Processing' | 'Shipped' | 'Delivered' | 'Pending';
 }
 
+const dummyOrders: Order[] = [
+  {
+    id: 'ORD-001',
+    date: '2024-12-15',
+    items: [
+      { name: 'Premium Cotton T-Shirt', quantity: 2, price: 799, unit: 'pieces' },
+      { name: 'Denim Jeans', quantity: 1, price: 1499, unit: 'pair' },
+      { name: 'Leather Belt', quantity: 1, price: 499, unit: 'piece' }
+    ],
+    subtotal: 3596,
+    tax: 647,
+    total: 4243,
+    status: 'Delivered'
+  },
+  {
+    id: 'ORD-002',
+    date: '2024-12-18',
+    items: [
+      { name: 'Wireless Earbuds', quantity: 1, price: 2499, unit: 'pair' },
+      { name: 'Phone Case', quantity: 1, price: 299, unit: 'piece' },
+      { name: 'Screen Protector', quantity: 2, price: 199, unit: 'pieces' }
+    ],
+    subtotal: 3196,
+    tax: 575,
+    total: 3771,
+    status: 'Shipped'
+  },
+  {
+    id: 'ORD-003',
+    date: '2024-12-20',
+    items: [
+      { name: 'Coffee Maker', quantity: 1, price: 3499, unit: 'unit' },
+      { name: 'Coffee Beans (500g)', quantity: 2, price: 599, unit: 'pack' }
+    ],
+    subtotal: 4697,
+    tax: 845,
+    total: 5542,
+    status: 'Processing'
+  },
+  {
+    id: 'ORD-004',
+    date: '2024-12-22',
+    items: [
+      { name: 'Running Shoes', quantity: 1, price: 2899, unit: 'pair' },
+      { name: 'Sports Socks', quantity: 3, price: 199, unit: 'pairs' }
+    ],
+    subtotal: 3496,
+    tax: 629,
+    total: 4125,
+    status: 'Pending'
+  },
+  {
+    id: 'ORD-005',
+    date: '2024-12-24',
+    items: [
+      { name: 'Laptop Backpack', quantity: 1, price: 1899, unit: 'piece' },
+      { name: 'USB-C Cable', quantity: 2, price: 299, unit: 'pieces' },
+      { name: 'Power Bank', quantity: 1, price: 1599, unit: 'piece' }
+    ],
+    subtotal: 4096,
+    tax: 737,
+    total: 4833,
+    status: 'Delivered'
+  }
+];
+
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const authResponse = await axios.post(
-          'https://pde3-dev-ed.develop.my.salesforce.com/services/oauth2/token',
-          new URLSearchParams({
-            grant_type: 'client_credentials',
-            client_id: '3MVG97z4K_iuCemhaHjeuAp6A5jpAuMB31Trve1nd0TZAeH7onoyc.LAATp2pnK2Ag3kaMYorR4Np7E7XgMa9',
-            client_secret: '49C874D60D67C1A6BF3B31213B2F924747A0D27CBEFD2ACEDE0751E20FFFEAA7',
-          }),
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-        );
+    // Simulate API call delay
+    const timer = setTimeout(() => {
+      setOrders(dummyOrders);
+      setLoading(false);
+    }, 500);
 
-        const accessToken = authResponse.data.access_token;
-
-        const query = `
-          SELECT OrderNumber, Status, EffectiveDate, AccountId,
-          (SELECT Quantity, UnitPrice, TotalPrice,
-                  PricebookEntry.Product2.Name,
-                  PricebookEntry.Product2.ProductCode,
-                  PricebookEntry.Product2.Description
-           FROM OrderItems)
-          FROM Order
-          ORDER BY CreatedDate DESC
-          LIMIT 200
-        `.replace(/\s+/g, '+');
-
-        const queryUrl = `https://pde3-dev-ed.develop.my.salesforce.com/services/data/v62.0/query?q=${query}`;
-        const response = await axios.get(queryUrl, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const fetchedOrders = response.data.records.map((order: any) => {
-          const items = (order.OrderItems?.records || []).map((item: any) => ({
-            name: item.PricebookEntry?.Product2?.Name || 'Unknown',
-            quantity: item.Quantity,
-            price: item.UnitPrice,
-            unit: 'units',
-          }));
-
-          const subtotal = items.reduce((sum: number, item: OrderItem) => sum + item.quantity * item.price, 0);
-          const tax = Math.round(subtotal * 0.18);
-          const total = subtotal + tax;
-
-          return {
-            id: order.OrderNumber,
-            date: order.EffectiveDate,
-            items,
-            subtotal,
-            tax,
-            total,
-            status: order.Status || 'Pending',
-          };
-        });
-
-        setOrders(fetchedOrders);
-      } catch (error) {
-        console.error('Failed to fetch orders:', error);
-      }
-    };
-
-    fetchOrders();
+    return () => clearTimeout(timer);
   }, []);
 
   const getStatusIcon = (status: string) => {
@@ -129,7 +138,12 @@ const Orders = () => {
           </div>
         </div>
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">Loading orders...</p>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
@@ -164,7 +178,7 @@ const Orders = () => {
                         {getStatusIcon(order.status)}
                         <span className="ml-1">{order.status}</span>
                       </Badge>
-                      <div className="text-lg font-bold text-gray-900">₹{order.total}</div>
+                      <div className="text-lg font-bold text-gray-900">₹{order.total.toLocaleString()}</div>
                     </div>
                   </div>
                 </CardHeader>
@@ -180,7 +194,7 @@ const Orders = () => {
                           </p>
                         </div>
                         <div className="font-medium text-gray-900">
-                          ₹{item.quantity * item.price}
+                          ₹{(item.quantity * item.price).toLocaleString()}
                         </div>
                       </div>
                     ))}
@@ -190,15 +204,15 @@ const Orders = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <p className="text-gray-600">Subtotal</p>
-                        <p className="font-medium">₹{order.subtotal}</p>
+                        <p className="font-medium">₹{order.subtotal.toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-gray-600">GST (18%)</p>
-                        <p className="font-medium">₹{order.tax}</p>
+                        <p className="font-medium">₹{order.tax.toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-gray-600 font-medium">Total</p>
-                        <p className="font-bold text-lg">₹{order.total}</p>
+                        <p className="font-bold text-lg">₹{order.total.toLocaleString()}</p>
                       </div>
                       <div className="flex justify-end">
                         <Button variant="outline" size="sm">
