@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
-import axios from 'axios';
 
 interface Product {
   id: string;
@@ -38,59 +37,141 @@ const ProductCatalog = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [cart, setCart] = useState<any[]>([]);
 
-  const fetchProducts = async () => {
-    const tokenUrl = 'https://pde3-dev-ed.develop.my.salesforce.com/services/oauth2/token';
-    const clientId = '3MVG97z4K_iuCemhaHjeuAp6A5jpAuMB31Trve1nd0TZAeH7onoyc.LAATp2pnK2Ag3kaMYorR4Np7E7XgMa9';
-    const clientSecret = '49C874D60D67C1A6BF3B31213B2F924747A0D27CBEFD2ACEDE0751E20FFFEAA7';
-
-    const params = new URLSearchParams();
-    params.append('grant_type', 'client_credentials');
-    params.append('client_id', clientId);
-    params.append('client_secret', clientSecret);
-
-    try {
-      const tokenResponse = await axios.post(tokenUrl, params, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      });
-      const accessToken = tokenResponse.data.access_token;
-
-      const query = `
-        SELECT Id, Name, ProductCode, Family, IsActive, Product_Image_URL__c,
-        (SELECT UnitPrice FROM PricebookEntries WHERE Pricebook2.IsStandard = true LIMIT 1)
-        FROM Product2
-        WHERE Family = 'Pipes'
-        ORDER BY CreatedDate DESC
-        LIMIT 200
-      `.replace(/\s+/g, '+');
-
-      const queryUrl = `https://pde3-dev-ed.develop.my.salesforce.com/services/data/v62.0/query?q=${query}`;
-
-      const response = await axios.get(queryUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const salesforceProducts = response.data.records.map((record: any) => ({
-        id: record.Id,
-        name: record.Name,
-        category: record.Family || 'General',
-        price: record.PricebookEntries?.records?.[0]?.UnitPrice || 0,
-        mrp: (record.PricebookEntries?.[0]?.UnitPrice || 0) * 1.1, // assume 10% markup
-        image: record.Product_Image_URL__c || 'https://via.placeholder.com/150',
-        rating: Math.random() * 2 + 3, // Random rating between 3 and 5
-        inStock: record.IsActive,
-        description: `High quality ${record.Family} - ${record.ProductCode}`,
-        schemes: ['Bulk Discount Available', 'Limited Time Offer'],
-        minOrderQty: 10,
-        unit: 'units',
-      }));
-
-      setProducts(salesforceProducts);
-    } catch (error) {
-      console.error('Error fetching product data:', error);
+  // Dummy product data in JSON format
+  const dummyProducts = [
+    {
+      id: '1',
+      name: 'PVC Pipes 4 inch',
+      category: 'Pipes',
+      price: 850,
+      mrp: 950,
+      image: 'https://images.unsplash.com/photo-1591955506269-5f9d2ed891e5?w=400&h=300&fit=crop',
+      rating: 4.5,
+      inStock: true,
+      description: 'High quality PVC pipes for plumbing and irrigation',
+      schemes: ['Bulk Discount Available', 'Limited Time Offer'],
+      minOrderQty: 10,
+      unit: 'units'
+    },
+    {
+      id: '2',
+      name: 'Steel Rods 12mm',
+      category: 'Steel',
+      price: 650,
+      mrp: 720,
+      image: 'https://images.unsplash.com/photo-1615895114510-3042652f8d52?w=400&h=300&fit=crop',
+      rating: 4.2,
+      inStock: true,
+      description: 'Construction grade steel rods for reinforcement',
+      schemes: ['Free Delivery', 'Contractor Discount'],
+      minOrderQty: 50,
+      unit: 'rods'
+    },
+    {
+      id: '3',
+      name: 'Cement Bags',
+      category: 'Cement',
+      price: 350,
+      mrp: 400,
+      image: 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=400&h=300&fit=crop',
+      rating: 4.7,
+      inStock: true,
+      description: 'Premium quality cement for construction',
+      schemes: ['Buy 10 Get 1 Free', 'Seasonal Offer'],
+      minOrderQty: 20,
+      unit: 'bags'
+    },
+    {
+      id: '4',
+      name: 'Ceramic Tiles',
+      category: 'Tiles',
+      price: 1200,
+      mrp: 1500,
+      image: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=400&h=300&fit=crop',
+      rating: 4.3,
+      inStock: true,
+      description: 'Premium ceramic tiles for flooring',
+      schemes: ['Installation Service', 'Sample Available'],
+      minOrderQty: 5,
+      unit: 'boxes'
+    },
+    {
+      id: '5',
+      name: 'Electrical Wires',
+      category: 'Electrical',
+      price: 280,
+      mrp: 320,
+      image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=400&h=300&fit=crop',
+      rating: 4.6,
+      inStock: true,
+      description: 'Copper electrical wires with PVC insulation',
+      schemes: ['Safety Certified', 'Bulk Pricing'],
+      minOrderQty: 100,
+      unit: 'meters'
+    },
+    {
+      id: '6',
+      name: 'Bricks',
+      category: 'Bricks',
+      price: 8,
+      mrp: 10,
+      image: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400&h=300&fit=crop',
+      rating: 4.1,
+      inStock: true,
+      description: 'Red clay bricks for construction',
+      schemes: ['Free Transport', 'Large Order Discount'],
+      minOrderQty: 1000,
+      unit: 'pieces'
+    },
+    {
+      id: '7',
+      name: 'Waterproofing Compound',
+      category: 'Chemicals',
+      price: 1200,
+      mrp: 1400,
+      image: 'https://images.unsplash.com/photo-1589923186741-b7d59d6b2c4b?w=400&h=300&fit=crop',
+      rating: 4.4,
+      inStock: false,
+      description: 'Advanced waterproofing solution for roofs and walls',
+      schemes: ['Expert Application', 'Warranty Included'],
+      minOrderQty: 5,
+      unit: 'liters'
+    },
+    {
+      id: '8',
+      name: 'Plywood Sheets',
+      category: 'Wood',
+      price: 1800,
+      mrp: 2100,
+      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=400&h=300&fit=crop',
+      rating: 4.0,
+      inStock: true,
+      description: 'Marine grade plywood sheets',
+      schemes: ['Custom Cutting', 'Free Samples'],
+      minOrderQty: 10,
+      unit: 'sheets'
+    },
+    {
+      id: '9',
+      name: 'Sanitary Ware Kit',
+      category: 'Sanitary',
+      price: 8500,
+      mrp: 9500,
+      image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop',
+      rating: 4.8,
+      inStock: true,
+      description: 'Complete bathroom fittings kit',
+      schemes: ['Installation Free', 'Extended Warranty'],
+      minOrderQty: 1,
+      unit: 'kit'
     }
+  ];
+
+  const fetchProducts = () => {
+    // Simulate API delay
+    setTimeout(() => {
+      setProducts(dummyProducts);
+    }, 300);
   };
 
   useEffect(() => {
@@ -215,11 +296,11 @@ const ProductCatalog = () => {
                     </span>
                   </div>
                 )}
-                {/* <div className="absolute top-2 right-2">
+                <div className="absolute top-2 right-2">
                   <Badge variant="secondary" className="bg-green-500 text-white">
                     {getDiscountPercentage(product.price, product.mrp)}% OFF
                   </Badge>
-                </div> */}
+                </div>
               </div>
 
               <CardContent className="p-4">
